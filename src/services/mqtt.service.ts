@@ -4,41 +4,31 @@ import { PostgresService } from "./postgres.service";
 
 export class MqttService {
   private client: mqtt.MqttClient;
-  private topic: string;
+  private topics: Set<string>;
   private postgresService: PostgresService;
 
   constructor(
     postgresService: PostgresService,
-    topic: string = `tele/${config.tasmotaDevice}/+` // Default topic
+    topics: string[] = [`tele/${config.tasmotaDevice}/+`] // Default topics
   ) {
     this.client = mqtt.connect(config.mqttBrokerUrl);
     this.postgresService = postgresService;
+    this.topics = new Set(topics);
 
-    this.topic = topic;
+    this.setupClient();
   }
 
-  setTopic(topic: string) {
-    this.topic = topic;
-  }
-
-  start() {
+  private setupClient() {
     this.client.on("connect", () => {
       console.log(`Connected to MQTT broker at ${config.mqttBrokerUrl}`);
-
-      this.client.subscribe(this.topic, (err) => {
-        if (err) {
-          console.error(`Failed to subscribe to topic ${this.topic}`, err);
-          process.exit(1);
-        }
-        console.log(`Subscribed to topic ${this.topic}`);
-      });
+      this.subscribeTopics();
     });
 
     this.client.on("message", (receivedTopic, message) => {
       let payload = message.toString();
       console.log(`Received message on topic ${receivedTopic}: ${payload}`);
 
-      // If payload is not a valid JSON, then restructuring it to a valid JSON as {"message": payload}\
+      // If payload is not a valid JSON, then restructuring it to a valid JSON as {"message": payload}
       try {
         JSON.parse(payload);
       } catch (error) {
@@ -58,5 +48,30 @@ export class MqttService {
     this.client.on("error", (err) => {
       console.error("MQTT client error", err);
     });
+  }
+
+  private subscribeTopics() {
+    this.topics.forEach(topic => {
+      this.client.subscribe(topic, (err) => {
+        if (err) {
+          console.error(`Failed to subscribe to topic ${topic}`, err);
+        } else {
+          console.log(`Subscribed to topic ${topic}`);
+        }
+      });
+    });
+  }
+
+  addTopic(topic: string) {
+    if (!this.topics.has(topic)) {
+      this.topics.add(topic);
+      this.client.subscribe(topic, (err) => {
+        if (err) {
+          console.error(`Failed to subscribe to topic ${topic}`, err);
+        } else {
+          console.log(`Subscribed to topic ${topic}`);
+        }
+      });
+    }
   }
 }

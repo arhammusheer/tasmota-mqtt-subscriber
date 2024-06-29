@@ -6,16 +6,13 @@ async function main() {
   const postgresService = new PostgresService();
   await postgresService.connect();
 
-  // Internal Data
-  const sensorData = new MqttService(postgresService);
-  sensorData.start();
+  const mqttService = new MqttService(postgresService);
 
-  // Additional Topics
+  // Subscribe to additional topics
   for (const topic of config.mqttTopics) {
-    const mqttService = new MqttService(postgresService, topic);
-    mqttService.start();
+    mqttService.addTopic(topic);
   }
-  
+
   process.on("SIGINT", async () => {
     await postgresService.close();
     process.exit(0);
