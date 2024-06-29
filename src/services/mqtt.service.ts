@@ -27,8 +27,15 @@ export class MqttService {
     });
 
     this.client.on('message', (receivedTopic, message) => {
-      const payload = message.toString();
+      let payload = message.toString();
       console.log(`Received message on topic ${receivedTopic}: ${payload}`);
+
+      // If payload is not a valid JSON, then restructuring it to a valid JSON as {"message": payload}\
+      try {
+        JSON.parse(payload);
+      } catch (error) {
+        payload = JSON.stringify({ message: payload });
+      }
 
       const document = {
         topic: receivedTopic,
