@@ -3,6 +3,11 @@ import { PostgresService } from "./services/postgres.service";
 import { config } from "./config";
 
 async function main() {
+  // Declare when running production
+  if (config.isProduction) {
+    console.log("RUNNING IN PRODUCTION MODE - WILL INSERT INTO POSTGRES");
+  }
+
   const postgresService = new PostgresService();
   await postgresService.connect();
 
