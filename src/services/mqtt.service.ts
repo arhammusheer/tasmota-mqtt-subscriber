@@ -1,15 +1,15 @@
 import * as mqtt from 'mqtt';
 import { config } from '../config';
-import { MongoService } from './mongo.service';
+import { PostgresService } from './postgres.service';
 
 export class MqttService {
   private client: mqtt.MqttClient;
-  private mongoService: MongoService;
   private topic: string;
+  private postgresService: PostgresService;
 
-  constructor(mongoService: MongoService) {
+  constructor(postgresService: PostgresService) {
     this.client = mqtt.connect(config.mqttBrokerUrl);
-    this.mongoService = mongoService;
+    this.postgresService = postgresService;
     this.topic = `tele/${config.tasmotaDevice}/+`; // Subscribe to all telemetry topics for the Tasmota device
   }
 
@@ -37,7 +37,7 @@ export class MqttService {
       };
 
       const collectionName = receivedTopic.replace(/\//g, '_'); // Replace '/' with '_' to form a valid collection name
-      this.mongoService.insertMessage(collectionName, document);
+      this.postgresService.insertMessage(collectionName, document);
     });
 
     this.client.on('error', (err) => {

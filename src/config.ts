@@ -1,4 +1,4 @@
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv";
 
 dotenv.config();
 
@@ -7,9 +7,15 @@ export const config = {
   mqttBrokerUrl: process.env.MQTT_BROKER_URL as string,
   mongoUri: process.env.MONGODB_URI as string,
   dbName: process.env.MONGODB_DB_NAME as string,
+  postgresUri: process.env.POSTGRES_URI as string,
 };
 
-if (!config.tasmotaDevice || !config.mqttBrokerUrl || !config.mongoUri || !config.dbName) {
+if (
+  !config.tasmotaDevice ||
+  !config.mqttBrokerUrl ||
+  !config.dbName ||
+  !config.postgresUri
+) {
   console.error("Missing environment variables");
   process.exit(1);
 }
