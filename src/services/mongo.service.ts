@@ -1,10 +1,9 @@
-import { MongoClient, Db, Collection } from 'mongodb';
-import { config } from '../config';
+import { MongoClient, Db } from "mongodb";
+import { config } from "../config";
 
 export class MongoService {
   private client: MongoClient;
   private db?: Db;
-  private collection?: Collection;
 
   constructor() {
     this.client = new MongoClient(config.mongoUri);
@@ -26,9 +25,15 @@ export class MongoService {
       try {
         const collection = this.db.collection(collectionName);
         const result = await collection.insertOne(document);
-        console.log(`Document inserted into collection ${collectionName} in MongoDB`, result.insertedId);
+        console.log(
+          `Document inserted into collection ${collectionName} in MongoDB`,
+          result.insertedId
+        );
       } catch (err) {
-        console.error(`Failed to insert document into collection ${collectionName} in MongoDB`, err);
+        console.error(
+          `Failed to insert document into collection ${collectionName} in MongoDB`,
+          err
+        );
       }
     } else {
       console.error("No MongoDB database found");
