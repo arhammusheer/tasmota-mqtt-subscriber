@@ -8,6 +8,8 @@ export const config = {
   mongoUri: process.env.MONGODB_URI as string,
   dbName: process.env.MONGODB_DB_NAME as string,
   postgresUri: process.env.POSTGRES_URI as string,
+  mqttTopics: process.env.MQTT_TOPICS?.split(",").map((topic) => topic.trim()) || [],
+  isProduction: process.env.RAILWAY_PROJECT_ID ? true : false,
 };
 
 if (

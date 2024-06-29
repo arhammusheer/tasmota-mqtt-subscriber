@@ -3,12 +3,18 @@ import { config } from '../config';
 
 export class PostgresService {
   private client: Client;
+  private dryRun: boolean;
 
   constructor() {
     this.client = new Client({ connectionString: config.postgresUri });
+    this.dryRun = !config.isProduction; // Dry run in development mode
   }
 
   async connect() {
+    if (this.dryRun) {
+      console.log("Dry run mode: Skipping connection to PostgreSQL");
+      return;
+    }
     try {
       await this.client.connect();
       console.log("Connected to PostgreSQL");
@@ -28,6 +34,11 @@ export class PostgresService {
       );
     `;
 
+    if (this.dryRun) {
+      console.log(`Dry run mode: Skipping table creation for ${tableName} with query: ${createTableQuery}`);
+      return;
+    }
+
     try {
       await this.client.query(createTableQuery);
       console.log(`Table ${tableName} ensured to exist in PostgreSQL`);
@@ -44,6 +55,11 @@ export class PostgresService {
       values: [document.topic, document.payload, document.timestamp],
     };
 
+    if (this.dryRun) {
+      console.log(`Dry run mode: Skipping insert with query: ${query.text} and values: ${query.values}`);
+      return;
+    }
+
     try {
       await this.client.query(query);
       console.log(`Document inserted into table ${tableName} in PostgreSQL`);
@@ -53,6 +69,10 @@ export class PostgresService {
   }
 
   async close() {
+    if (this.dryRun) {
+      console.log("Dry run mode: Skipping closing PostgreSQL connection");
+      return;
+    }
     await this.client.end();
   }
 }

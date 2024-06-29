@@ -1,22 +1,30 @@
-import * as mqtt from 'mqtt';
-import { config } from '../config';
-import { PostgresService } from './postgres.service';
+import * as mqtt from "mqtt";
+import { config } from "../config";
+import { PostgresService } from "./postgres.service";
 
 export class MqttService {
   private client: mqtt.MqttClient;
   private topic: string;
   private postgresService: PostgresService;
 
-  constructor(postgresService: PostgresService) {
+  constructor(
+    postgresService: PostgresService,
+    topic: string = `tele/${config.tasmotaDevice}/+` // Default topic
+  ) {
     this.client = mqtt.connect(config.mqttBrokerUrl);
     this.postgresService = postgresService;
-    this.topic = `tele/${config.tasmotaDevice}/+`; // Subscribe to all telemetry topics for the Tasmota device
+
+    this.topic = topic;
+  }
+
+  setTopic(topic: string) {
+    this.topic = topic;
   }
 
   start() {
-    this.client.on('connect', () => {
+    this.client.on("connect", () => {
       console.log(`Connected to MQTT broker at ${config.mqttBrokerUrl}`);
-			
+
       this.client.subscribe(this.topic, (err) => {
         if (err) {
           console.error(`Failed to subscribe to topic ${this.topic}`, err);
@@ -26,7 +34,7 @@ export class MqttService {
       });
     });
 
-    this.client.on('message', (receivedTopic, message) => {
+    this.client.on("message", (receivedTopic, message) => {
       let payload = message.toString();
       console.log(`Received message on topic ${receivedTopic}: ${payload}`);
 
@@ -40,14 +48,14 @@ export class MqttService {
       const document = {
         topic: receivedTopic,
         payload: payload,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
-      const collectionName = receivedTopic.replace(/\//g, '_'); // Replace '/' with '_' to form a valid collection name
+      const collectionName = receivedTopic.replace(/\//g, "_"); // Replace '/' with '_' to form a valid collection name
       this.postgresService.insertMessage(collectionName, document);
     });
 
-    this.client.on('error', (err) => {
+    this.client.on("error", (err) => {
       console.error("MQTT client error", err);
     });
   }
