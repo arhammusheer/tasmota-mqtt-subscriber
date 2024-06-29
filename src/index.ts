@@ -1,15 +1,15 @@
-import { MongoService } from './services/mongo.service';
 import { MqttService } from './services/mqtt.service';
+import { PostgresService } from './services/postgres.service';
 
 async function main() {
-  const mongoService = new MongoService();
-  await mongoService.connect();
+	const postgresService = new PostgresService();
+	await postgresService.connect();
 
-  const mqttService = new MqttService(mongoService);
+  const mqttService = new MqttService(postgresService);
   mqttService.start();
 
   process.on('SIGINT', async () => {
-    await mongoService.close();
+    await postgresService.close();
     process.exit(0);
   });
 }
